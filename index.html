@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contractor Ledger: Multi-Partner Desk & Labor Vault</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base & Typography Improvements */
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; padding: 20px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        /* Modernized Login Screen with Glassmorphism */
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(248, 250, 252, 0.85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-card { background: white; padding: 40px; border-radius: 16px; border: 1px solid rgba(226, 232, 240, 0.8); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); width: 100%; max-width: 420px; box-sizing: border-box; }
+        .login-title { font-size: 22px; font-weight: 700; color: #1e3a8a; margin-top: 0; margin-bottom: 24px; text-align: center; border-bottom: 2px solid #eff6ff; padding-bottom: 15px; }
+        .login-error { color: #b91c1c; background-color: #fef2f2; border: 1px solid #fca5a5; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 16px; text-align: center; display: none; }
+        
+        /* Cloud Sync Indicator */
+        #cloud-sync-status { display: none; position: fixed; top: 20px; right: 20px; background: #1e40af; color: white; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 10000; align-items: center; gap: 8px; }
+        
+        /* Smooth Header Tabs */
+        .header-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .tab-box { padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; text-align: left; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); background-color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); }
+        .tab-box:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04); }
+        
+        .tab-box.active-kharch { background-color: #2563eb; color: white; border-color: #1d4ed8; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3); }
+        .tab-box.active-bills { background-color: #ea580c; color: white; border-color: #c2410c; box-shadow: 0 10px 15px -3px rgba(234, 88, 12, 0.3); }
+        
+        .tab-title { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; margin: 0; font-weight: 700; opacity: 0.9; }
+        .tab-amount { font-size: 36px; font-weight: 800; margin: 10px 0 0 0; color: #1e3a8a; letter-spacing: -0.5px; }
+        .tab-box.active-kharch .tab-amount { color: #bbf7d0; }
+        .tab-box.active-bills .tab-amount { color: #fef08a; }
+        .tab-subtitle { margin: 8px 0 0 0; font-size: 13px; opacity: 0.75; font-style: normal; }
+        
+        /* Workspace & Cards */
+        .workspace-view { display: none; grid-template-columns: 1fr; gap: 24px; animation: fadeIn 0.4s ease-out forwards; opacity: 0; }
+        .workspace-view.active { display: grid; opacity: 1; }
+        @media (min-width: 1024px) { .workspace-view { grid-template-columns: 460px 1fr; } }
+        
+        .card { background: white; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); height: fit-content; }
+        .card-title { font-size: 18px; font-weight: 700; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+        .title-expense { color: #2563eb; }
+        .title-bill { color: #ea580c; }
+        
+        /* Modernized Forms */
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-control { width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; font-size: 14px; outline: none; background-color: #fff; transition: all 0.2s ease; font-family: inherit; }
+        .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+        .inline-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        
+        /* Premium Buttons */
+        .btn { display: inline-flex; justify-content: center; align-items: center; width: 100%; padding: 12px 16px; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; text-align: center; font-family: inherit; letter-spacing: 0.3px; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-blue { background-color: #2563eb; color: white; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
+        .btn-blue:hover:not(:disabled) { background-color: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(37,99,235,0.3); }
+        .btn-orange { background-color: #ea580c; color: white; box-shadow: 0 2px 4px rgba(234,88,12,0.2); }
+        .btn-orange:hover:not(:disabled) { background-color: #c2410c; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(234,88,12,0.3); }
+        .btn-green { background-color: #16a34a; color: white; width: auto; font-size: 13px; padding: 10px 20px; box-shadow: 0 2px 4px rgba(22,163,74,0.2); }
+        .btn-green:hover:not(:disabled) { background-color: #15803d; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(22,163,74,0.3); }
+        .btn-danger { background-color: #ef4444; color: white; font-size: 13px; padding: 8px 16px; }
+        .btn-danger:hover { background-color: #dc2626; box-shadow: 0 2px 4px rgba(239,68,68,0.2); }
+        
+        .btn-edit { background-color: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; font-size: 12px; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; }
+        .btn-edit:hover { background-color: #dbeafe; border-color: #93c5fd; }
+        
+        .btn-view-doc { background-color: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; cursor: pointer; transition: all 0.2s ease; }
+        .btn-view-doc:hover { background-color: #e0f2fe; }
+        
+        /* Dashboard Filters */
+        .filter-bar { background-color: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .filter-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 12px; }
+        @media (min-width: 768px) { .filter-grid { grid-template-columns: repeat(4, 1fr); } }
+        
+        /* Status Boxes */
+        .pnl-box { margin-top: 20px; padding: 14px 18px; border-radius: 10px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: all 0.3s ease; }
+        .pnl-neutral { background-color: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+        .pnl-profit { background-color: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+        .pnl-loss { background-color: #fef2f2; color: #b91c1c; border: 1px solid #fca5a5; }
+
+        .partner-summary-box { background-color: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .labor-summary-card { background-color: #f0fdfa; border: 1px solid #ccfbf1; padding: 16px; border-radius: 10px; margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px; }
+
+        /* Tables Refined */
+        .table-container { background: white; border-radius: 12px; border: 1px solid #e2e8f0; overflow-x: auto; max-height: 550px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .table-header-flex { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background-color: #f8fafc; border-bottom: 1px solid #e2e8f0; border-radius: 12px 12px 0 0; position: sticky; top: 0; z-index: 10; }
+        .ledger-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; font-size: 14px; }
+        .ledger-table th { background-color: #f8fafc; color: #64748b; padding: 14px 20px; font-weight: 700; font-size: 11px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 5; }
+        .ledger-table td { padding: 16px 20px; border-bottom: 1px solid #f1f5f9; vertical-align: top; color: #334155; }
+        .ledger-table tr:last-child td { border-bottom: none; }
+        .ledger-table tr { transition: background-color 0.2s ease; }
+        .ledger-table tr:hover { background-color: #f8fafc; }
+        
+        /* Badges */
+        .badge { display: inline-flex; align-items: center; padding: 4px 8px; font-size: 11px; font-weight: 600; border-radius: 6px; background-color: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; margin-bottom: 4px; letter-spacing: 0.2px; }
+        .badge-orange { background-color: #fff7ed; color: #c2410c; border-color: #ffedd5; }
+        .badge-category { background-color: #f1f5f9; color: #475569; border-color: #e2e8f0; }
+        .badge-labor { background-color: #f0fdfa; color: #0f766e; border-color: #ccfbf1; font-size: 10px; }
+        .badge-partner { background-color: #fef2f2; color: #b91c1c; border-color: #fecaca; font-size: 11px; font-weight: 700; }
+        
+        /* Utils */
+        .text-right { text-align: right; }
+        .font-bold { font-weight: 700; }
+        .custom-input-box { background-color: #fef9c3; border: 1px solid #fde047; margin-top: 8px; display: none; padding: 12px; font-weight: 600; border-radius: 8px; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="cloud-sync-status">
+        <span id="sync-icon">🔄</span> <span id="sync-text">Syncing with Google Sheets...</span>
+    </div>
+
+    <div id="login-overlay">
+        <div class="login-card">
+            <h2 class="login-title">🔐 Vault Entry Identity Check</h2>
+            <div id="login-error-msg" class="login-error">Invalid Username or Secret Key pin!</div>
+            <form id="vault-auth-form" onsubmit="handleVaultLogin(event)">
+                <div class="form-group">
+                    <label>User ID</label>
+                    <input type="text" id="login-username" required class="form-control" placeholder="e.g. Siddu, Sampu, operator">
+                </div>
+                <div class="form-group">
+                    <label>Secret Password</label>
+                    <input type="password" id="login-password" required class="form-control" placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-blue" style="margin-top:20px;">Unlock Workspace</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container" id="app-main-view" style="display:none;">
+        <div style="text-align: right; margin-bottom: 20px; display: flex; justify-content: flex-end; align-items: center; gap: 15px;">
+            <span style="font-weight: 600; color:#64748b; font-size: 14px;">Active User: <span id="display-user-role" style="color:#1d4ed8; font-weight: 700;"></span></span>
+            <button onclick="logoutSession()" class="btn btn-danger btn-sm" style="width:auto; border-radius: 8px;">Secure Exit</button>
+        </div>
+        
+        <div class="header-tabs">
+            <div id="tab-kharch-btn" class="tab-box active-kharch" onclick="switchControlTab('KHARCH')">
+                <p class="tab-title">📉 Total Operational Kharch Spent</p>
+                <p id="total-kharch" class="tab-amount">₹0</p>
+                <p class="tab-subtitle">Live cloud total across all partner entries</p>
+            </div>
+            <div id="tab-bills-btn" class="tab-box" onclick="switchControlTab('BILLS')">
+                <p class="tab-title">🏢 Annual Tenders & Work Orders</p>
+                <p id="total-pending" class="tab-amount" style="color:#c2410c;">₹0</p>
+                <p class="tab-subtitle">Live cloud total of active project claims</p>
+            </div>
+        </div>
+
+        <div id="view-kharch-workspace" class="workspace-view active">
+            <div class="card">
+                <h2 class="card-title title-expense" id="form-action-title">📝 Log Daily Operational Kharch</h2>
+                <form id="expense-form">
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="exp-date" required class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label style="color:#b91c1c;">💸 Paid By (Partner/Owner)</label>
+                        <select id="exp-paid-by" required class="form-control" style="border-color:#fca5a5; background-color:#fef2f2; font-weight:600; color:#991b1b;">
+                            <option value="Sampu">Sampu</option>
+                            <option value="Siddu">Siddu</option>
+                            <option value="SAS">SAS</option>
+                            <option value="Other/Mulla Cash">Other / Mulla Cash</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>District</label>
+                        <select id="exp-district" onchange="onDistrictChange(this.value, 'exp-project')" class="form-control">
+                            <option value="Chikkodi">Chikkodi</option>
+                            <option value="Belagavi">Belagavi</option>
+                            <option value="Bagalkot">Bagalkot</option>
+                            <option value="Tumkur">Tumkur</option>
+                            <option value="Vijayapura">Vijayapura (Bijapur)</option>
+                            <option value="Dharwad">Dharwad</option>
+                            <option value="Gadag">Gadag</option>
+                            <option value="Other">Other District</option>
+                            <option value="WRITE_CUSTOM" style="font-weight:700; color:#2563eb;">[ + Type Custom District ]</option>
+                        </select>
+                        <input type="text" id="exp-custom-district-text" placeholder="Type district name..." class="form-control custom-input-box">
+                    </div>
+                    <div class="form-group">
+                        <label>Project / Plant Scope</label>
+                        <select id="exp-project" onchange="toggleCustomInput(this.value, 'exp-custom-project-text')" class="form-control"></select>
+                        <input type="text" id="exp-custom-project-text" placeholder="Type project name..." class="form-control custom-input-box">
+                    </div>
+                    <div class="form-group">
+                        <label>Expense Category</label>
+                        <select id="exp-category" onchange="onCategoryChange(this.value)" class="form-control">
+                            <option value="Labour Fixed Salary">Labour Monthly Fixed Salary</option>
+                            <option value="Advance Labour Payment">Advance Labour Payment (Short Term)</option>
+                            <option value="Chemical">Chemical</option>
+                            <option value="Leakage (JCB)">Leakage (JCB)</option>
+                            <option value="Leakage (Hardware)">Leakage (Hardware)</option>
+                            <option value="Commission">Commission</option>
+                            <option value="Advance Commission">Advance Commission</option>
+                            <option value="Diesel">Diesel</option>
+                            <option value="Petrol">Petrol</option>
+                            <option value="Food">Food / Uta</option>
+                            <option value="WRITE_CUSTOM" style="font-weight:700; color: #ea580c;">[ + Type Custom Category ]</option>
+                        </select>
+                        <input type="text" id="exp-custom-cat-text" placeholder="Type category name..." class="form-control custom-input-box">
+                    </div>
+
+                    <div class="form-group" id="labor-selector-wrapper">
+                        <label style="color:#0f766e;">Link to Specific Worker / Laborer</label>
+                        <select id="exp-labor-name" onchange="toggleCustomInput(this.value, 'exp-custom-labor-text')" class="form-control" style="border-color:#99f6e4; background-color:#f0fdfa; color:#0f766e; font-weight: 500;">
+                            <option value="GENERAL_UNLINKED">-- Select Worker --</option>
+                            <option value="Satish">Satish (New House/Site)</option>
+                            <option value="Mahantesh Shiraganve">Mahantesh Shiraganve (Khd JJM)</option>
+                            <option value="Raju Hiremath">Raju Hiremath (Engineer/Supervisor)</option>
+                            <option value="Ravikant">Ravikant</option>
+                            <option value="Siddu">Siddu</option>
+                            <option value="Somu">Somu</option>
+                            <option value="WRITE_CUSTOM" style="font-weight:700; color:#0d9488;">[ + Add New Worker Name ]</option>
+                        </select>
+                        <input type="text" id="exp-custom-labor-text" placeholder="Type new worker full name..." class="form-control custom-input-box" style="background-color:#ccfbf1; border-color:#5eead4;">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Particulars (Details)</label>
+                        <input type="text" id="exp-details" placeholder="e.g., Paid 1st installment advance via cash" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Paid (₹)</label>
+                        <input type="number" id="exp-amount" placeholder="0" required class="form-control" style="font-weight:700; font-size:16px; color:#1e3a8a;">
+                    </div>
+                    <button type="submit" id="submit-exp-btn" class="btn btn-blue" style="margin-top:20px;">☁️ Save securely to Cloud</button>
+                </form>
+            </div>
+
+            <div>
+                <div class="filter-bar owner-privilege">
+                    <h2 style="margin:0 0 16px 0; font-size:16px; font-weight:700; color:#1d4ed8; display:flex; align-items:center; gap:8px;">📊 Operational Kharch Filtering</h2>
+                    <div class="filter-grid">
+                        <div>
+                            <label style="font-size:10px; font-weight:700; color:#64748b;">START DATE</label>
+                            <input type="date" id="exp-filter-start" onchange="updateDashboard()" class="form-control">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; font-weight:700; color:#64748b;">END DATE</label>
+                            <input type="date" id="exp-filter-end" onchange="updateDashboard()" class="form-control">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; font-weight:700; color:#64748b;">DISTRICT</label>
+                            <select id="exp-filter-district" onchange="onFilterDistrictChange(this.value, 'exp-filter-project')" class="form-control">
+                                <option value="ALL">-- All Districts --</option>
+                                <option value="Chikkodi">Chikkodi</option>
+                                <option value="Belagavi">Belagavi</option>
+                                <option value="Bagalkot">Bagalkot</option>
+                                <option value="Tumkur">Tumkur</option>
+                                <option value="Vijayapura">Vijayapura (Bijapur)</option>
+                                <option value="Dharwad">Dharwad</option>
+                                <option value="Gadag">Gadag</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:10px; font-weight:700; color:#64748b;">PROJECT / PLANT</label>
+                            <select id="exp-filter-project" onchange="updateDashboard()" class="form-control">
+                                <option value="ALL">-- All Projects --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="filter-grid" style="margin-top:16px; border-top:1px solid #e2e8f0; padding-top:16px; grid-template-columns: 1fr 1fr;">
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#b91c1c; text-transform:uppercase;">👤 Filter By Partner Draw</label>
+                            <select id="exp-filter-partner" onchange="updateDashboard()" class="form-control" style="margin-top:6px; border-color:#fca5a5; background-color:#fef2f2;">
+                                <option value="ALL">-- All Partners (No Owner Filter) --</option>
+                                <option value="Sampu">Sampu Ledger Lines</option>
+                                <option value="Siddu">Siddu Ledger Lines</option>
+                                <option value="SAS">SAS Ledger Lines</option>
+                                <option value="Other/Mulla Cash">Other / Mulla Cash</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:700; color:#0f766e; text-transform:uppercase;">👤 Search Worker Profile</label>
+                            <select id="exp-filter-labor" onchange="updateDashboard()" class="form-control" style="margin-top:6px; border-color:#99f6e4; background-color:#f0fdfa;">
+                                <option value="ALL">-- No Worker Filter --</option>
+                                <option value="Satish">Satish</option>
+                                <option value="Mahantesh Shiraganve">Mahantesh Shiraganve</option>
+                                <option value="Raju Hiremath">Raju Hiremath</option>
+                                <option value="Ravikant">Ravikant</option>
+                                <option value="Siddu">Siddu</option>
+                                <option value="Somu">Somu</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="partner-summary-widget" class="partner-summary-box" style="display:none;">
+                        <span>Total Paid Out-of-Pocket by Partner:</span>
+                        <span id="partner-total-value">₹0</span>
+                    </div>
+
+                    <div id="labor-summary-slip" class="labor-summary-card" style="display:none;">
+                        <div>
+                            <span style="color:#64748b; font-weight:600;">Total Salary Paid:</span><br>
+                            <span id="labor-total-salary" class="font-bold" style="font-size:18px; color:#0f172a;">₹0</span>
+                        </div>
+                        <div style="border-left: 1px solid #cbd5e1; padding-left:16px;">
+                            <span style="color:#b91c1c; font-weight:600;">Active Outstanding Advances:</span><br>
+                            <span id="labor-total-advance" class="font-bold" style="font-size:18px; color:#b91c1c;">₹0</span>
+                        </div>
+                    </div>
+
+                    <div id="pnl-summary-widget" class="pnl-box pnl-neutral">
+                        <span>Select a specific project to view Year Profit / Loss margins...</span>
+                        <span id="pnl-value">₹0</span>
+                    </div>
+
+                    <div style="text-align: right; margin-top: 20px; border-top:1px solid #e2e8f0; padding-top:16px;">
+                        <button onclick="exportExpenses()" class="btn btn-green">📥 Download Filtered Kharch (CSV)</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header-flex">
+                        <h3 style="margin:0; font-size:15px; font-weight:700; color:#1e3a8a;" id="kharch-report-title">Statement Entries</h3>
+                        <button onclick="manageCloudDataNotice()" class="btn-edit owner-privilege" style="border-radius: 6px;">✏️ Edit/Delete via Sheet</button>
+                    </div>
+                    <table class="ledger-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Scope / District</th>
+                                <th>Category / Payer</th>
+                                <th>Particulars</th>
+                                <th class="text-right">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expense-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-bills-workspace" class="workspace-view">
+            <div class="card">
+                <h2 class="card-title title-bill">🏢 Log Fixed Tender & RA Claim</h2>
+                <form id="bill-form">
+                    <div class="form-group">
+                        <label>Date of Entry / Submission</label>
+                        <input type="date" id="bill-date" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>District</label>
+                        <select id="bill-district" onchange="onDistrictChange(this.value, 'bill-project')" class="form-control">
+                            <option value="Chikkodi">Chikkodi</option>
+                            <option value="Belagavi">Belagavi</option>
+                            <option value="Bagalkot">Bagalkot</option>
+                            <option value="Tumkur">Tumkur</option>
+                            <option value="Vijayapura">Vijayapura (Bijapur)</option>
+                            <option value="Dharwad">Dharwad</option>
+                            <option value="Gadag">Gadag</option>
+                            <option value="Other">Other District</option>
+                            <option value="WRITE_CUSTOM" style="font-weight:700; color:#2563eb;">[ + Type Custom District ]</option>
+                        </select>
+                        <input type="text" id="bill-custom-district-text" placeholder="Type district name..." class="form-control custom-input-box">
+                    </div>
+                    <div class="form-group">
+                        <label>Project / Tender Name</label>
+                        <select id="bill-project" onchange="toggleCustomInput(this.value, 'bill-custom-project-text')" class="form-control"></select>
+                        <input type="text" id="bill-custom-project-text" placeholder="Type project name..." class="form-control custom-input-box">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Entry Stage Type</label>
+                        <select id="bill-stage-type" onchange="onBillStageChange(this.value)" class="form-control">
+                            <option value="NEW_TENDER">🎯 Work Order Issued (Fixed Annual Value)</option>
+                            <option value="RA_BILL">⚡ Progressive RA running account bill claimed</option>
+                        </select>
+                    </div>
+
+                    <div id="tender-input-wrapper" class="form-group">
+                        <div class="inline-inputs">
+                            <div>
+                                <label>Work Order Issue Date</label>
+                                <input type="date" id="bill-wo-date" class="form-control">
+                            </div>
+                            <div>
+                                <label style="color:#c2410c;">Fixed Annual Contract Amount (₹)</label>
+                                <input type="number" id="bill-tender-amount" placeholder="Fixed yearly value" class="form-control" style="font-weight:700; color:#c2410c; background-color:#fff7ed; border-color:#fed7aa;">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="ra-input-wrapper" class="form-group" style="display:none;">
+                        <div class="inline-inputs">
+                            <div>
+                                <label>RA Bill Level</label>
+                                <select id="bill-ra-level" class="form-control">
+                                    <option value="1st Part RA Bill">1st Part RA Bill (3 Months)</option>
+                                    <option value="2nd Part RA Bill">2nd Part RA Bill (6 Months)</option>
+                                    <option value="3rd & Final Bill">3rd & Final Bill</option>
+                                    <option value="Extra Deviation Bill">Extra Deviation Bill</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="color:#ea580c;">Claimed Amount (₹)</label>
+                                <input type="number" id="bill-part-amount" placeholder="Claimed value" class="form-control" style="font-weight:700; color:#ea580c; background-color:#fff7ed; border-color:#fed7aa;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Particulars (Reference Details)</label>
+                        <input type="text" id="bill-details" placeholder="Ref or details of document submitted..." required class="form-control">
+                    </div>
+
+                    <div class="form-group" style="background-color: #f8fafc; border: 1px dashed #cbd5e1; padding: 16px; border-radius: 8px; margin-top: 20px; transition: border-color 0.2s;">
+                        <label style="color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                            <span>📁</span> Attach Digital Document Copy (Saves to local device)
+                        </label>
+                        
+                        <select id="bill-doc-type" class="form-control" style="margin-bottom: 12px; font-size: 13px;">
+                            <option value="Work Order Copy">Work Order Copy (WO)</option>
+                            <option value="Letter of Acceptance">Letter of Acceptance (LOA)</option>
+                            <option value="Agreement Copy">Agreement Copy</option>
+                            <option value="GP Monthly Satisfactory Report">GP Monthly Satisfactory Report</option>
+                            <option value="Monthly Water Test Report">Monthly Water Test Report</option>
+                            <option value="Signed RA Bill Copy">Signed RA Bill Copy</option>
+                        </select>
+                        <input type="file" id="bill-file-input" class="form-control" style="font-size: 13px; background: white; padding: 8px;">
+                    </div>
+
+                    <button type="submit" id="submit-bill-btn" class="btn btn-orange" style="margin-top:20px;">☁️ Save Bill securely to Cloud</button>
+                </form>
+            </div>
+
+            <div>
+                <div class="filter-bar owner-privilege">
+                    <h2 style="margin:0 0 16px 0; font-size:16px; font-weight:700; color:#ea580c; display:flex; align-items:center; gap:8px;">📊 Government Bills Filtering</h2>
+                    <div class="filter-grid">
+                        <div>
+                            <label style="font-size:10px; font-weight:700; color:#64748b;">START DATE</label>
+                            <input type="date" id="bill-filter-start" onchange="updateDashboard()" class="form-control">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; font-weight:700; color:#64748b;">END DATE</label>
+                            <input type="date" id="bill-filter-end" onchange="updateDashboard()" class="form-control">
+                        </div>
+                        <div>
+                            <label style="font-size:10px; font-weight:700; color:#64748b;">DISTRICT</label>
+                            <select id="bill-filter-district" onchange="onFilterDistrictChange(this.value, 'bill-filter-project')" class="form-control">
+                                <option value="ALL">-- All Districts --</option>
+                                <option value="Chikkodi">Chikkodi</option>
+                                <option value="Belagavi">Belagavi</option>
+                                <option value="Bagalkot">Bagalkot</option>
+                                <option value="Tumkur">Tumkur</option>
+                                <option value="Vijayapura">Vijayapura (Bijapur)</option>
+                                <option value="Dharwad">Dharwad</option>
+                                <option value="Gadag">Gadag</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:10px; font-weight:700; color:#64748b;">PROJECT / PLANT</label>
+                            <select id="bill-filter-project" onchange="updateDashboard()" class="form-control">
+                                <option value="ALL">-- All Projects --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px; border-top:1px solid #e2e8f0; padding-top:16px;">
+                        <button onclick="exportBills()" class="btn btn-green" style="background-color:#ea580c; box-shadow: 0 2px 4px rgba(234,88,12,0.2);">📥 Download Filtered Bills (CSV)</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <div class="table-header-flex">
+                        <h3 style="margin:0; font-size:15px; font-weight:700; color:#c2410c;" id="bills-report-title">Progressive Statements</h3>
+                        <button onclick="manageCloudDataNotice()" class="btn-edit owner-privilege" style="border-radius: 6px; color:#c2410c; border-color:#fed7aa; background-color:#fff7ed;">✏️ Edit/Delete via Sheet</button>
+                    </div>
+                    <table class="ledger-table">
+                        <thead>
+                            <tr>
+                                <th>Date / WO Date</th>
+                                <th>Scope / District</th>
+                                <th>Entry Type</th>
+                                <th>Value Logged</th>
+                                <th>Particulars & Attached Scans</th>
+                                <th class="text-right">Project Outstanding Owed</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bill-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // CLOUD API CONFIGURATION (PHASE 2)
+        // ==========================================
+        const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtfKSoCwZhSrN9SJgFQmiz3Xvm_Og7-jnGWB_yGChsIq0jakX6mbeVAN89rCqTDWtc/exec';
+        
+        let expenses = [];
+        let pendingBills = [];
+        let customProjectsMap = JSON.parse(localStorage.getItem('kharch_district_custom_projects')) || {}; 
+
+        // AUTHENTICATION PROTOCOL HANDLERS
+        let currentUserRole = sessionStorage.getItem('active_user_role') || null;
+
+        function handleVaultLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('login-username').value.trim();
+            const pass = document.getElementById('login-password').value.trim();
+            const errMsg = document.getElementById('login-error-msg');
+
+            if ((user === 'Siddu' || user === 'Sampu') && pass === '54904764') {
+                initiateSession(user, 'OWNER');
+            } else if (user === 'operator' && pass === '6362637345') {
+                initiateSession(user, 'OPERATOR');
+            } else {
+                errMsg.style.display = 'block';
+            }
+        }
+
+        function initiateSession(username, role) {
+            sessionStorage.setItem('active_user_role', username);
+            sessionStorage.setItem('active_security_clearance', role);
+            currentUserRole = username;
+            applySecurityClearance(role);
+            
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app-main-view').style.display = 'block';
+            document.getElementById('display-user-role').innerText = username;
+            
+            if(username === 'Siddu' || username === 'Sampu') {
+                document.getElementById('exp-paid-by').value = username;
+            }
+            
+            // Kick off Cloud Data Fetch
+            fetchCloudData();
+        }
+
+        // ==========================================
+        // CLOUD SYNC FUNCTIONS
+        // ==========================================
+        function showSyncStatus(message, isError = false) {
+            const toast = document.getElementById('cloud-sync-status');
+            const text = document.getElementById('sync-text');
+            toast.style.display = 'flex';
+            toast.style.backgroundColor = isError ? '#b91c1c' : '#1e40af';
+            text.innerText = message;
+        }
+
+        function hideSyncStatus(delay = 2000) {
+            setTimeout(() => {
+                document.getElementById('cloud-sync-status').style.display = 'none';
+            }, delay);
+        }
+
+        async function fetchCloudData() {
+            showSyncStatus("Syncing with Google Sheets...");
+            try {
+                const response = await fetch(GOOGLE_APP_SCRIPT_URL);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Google Sheets returns oldest to newest row. We reverse it so newest is on top.
+                    expenses = data.kharch.reverse() || [];
+                    pendingBills = data.bills.reverse() || [];
+                    
+                    showSyncStatus("✔️ Live Data Loaded!");
+                    hideSyncStatus();
+                    updateDashboard();
+                } else {
+                    showSyncStatus("⚠️ Error reading cloud data", true);
+                }
+            } catch (error) {
+                console.error("Cloud fetch error:", error);
+                showSyncStatus("⚠️ Network error. Retrying...", true);
+            }
+        }
+
+        async function saveToCloud(payloadType, payloadData) {
+            try {
+                const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ type: payloadType, payload: payloadData })
+                });
+                const result = await response.json();
+                return result;
+            } catch(e) {
+                console.error("Cloud save error:", e);
+                return { status: 'error' };
+            }
+        }
+
+        function manageCloudDataNotice() {
+            alert("☁️ CLOUD SYNC ACTIVE:\n\nTo ensure data stays perfect across all partners, editing and deleting is now disabled inside the web app.\n\nPlease open your 'Vault Ledger Database' Google Sheet directly to correct any mistakes. Changes made in the sheet will automatically appear here on refresh.");
+        }
+
+        // ==========================================
+
+        function applySecurityClearance(role) {
+            const ownerElements = document.querySelectorAll('.owner-privilege');
+            if (role === 'OPERATOR') {
+                ownerElements.forEach(el => el.style.setProperty('display', 'none', 'important'));
+            } else {
+                ownerElements.forEach(el => el.style.display = '');
+            }
+        }
+
+        function logoutSession() {
+            sessionStorage.clear();
+            window.location.reload();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedRole = sessionStorage.getItem('active_user_role');
+            const savedClearance = sessionStorage.getItem('active_security_clearance');
+            if (savedRole && savedClearance) {
+                initiateSession(savedRole, savedClearance);
+            }
+        });
+
+        const projectDirectory = {
+            "Chikkodi": ["Jainapur", "Khadakalat", "Siddapurwadi", "Malikwad", "Desk", "Furniture", "Water Plant Maintenance"],
+            "Belagavi": ["Water Plant Maintenance", "School Furniture Tender", "New House Construction", "General Admin"],
+            "Bagalkot": ["Teggi WTP", "Arakeri WTP", "Belur WTP", "Desk", "Furniture", "Water Plant Maintenance"],
+            "Tumkur": ["Water Plant Maintenance", "General Admin"],
+            "Vijayapura": ["School Furniture Supply Tender", "Water Plant Maintenance"],
+            "Dharwad": ["Water Plant Maintenance", "School Furniture Supply"],
+            "Gadag": ["Water Plant Maintenance", "School Furniture Supply"],
+            "Other": ["Water Treatment Plant", "School Furniture Tender", "Gram Panchayat Tender", "New House Construction", "General Admin"]
+        };
+
+        // IndexedDB for File Attachments (Local device storage)
+        let db;
+        const dbRequest = indexedDB.open("ContractorVaultDB", 1);
+        dbRequest.onupgradeneeded = function(e) {
+            let activeDb = e.target.result;
+            if(!activeDb.objectStoreNames.contains("files")) activeDb.createObjectStore("files", { keyPath: "billId" });
+        };
+        dbRequest.onsuccess = function(e) { db = e.target.result; };
+
+        function saveFileToVault(billId, fileBlob, fileName, fileType, docLabel, successCallback) {
+            if(!db) return;
+            let transaction = db.transaction(["files"], "readwrite");
+            transaction.objectStore("files").put({ billId: billId, blob: fileBlob, name: fileName, type: fileType, label: docLabel });
+            transaction.oncomplete = function() { successCallback(); };
+        }
+
+        function triggerVaultDownload(billId) {
+            if(!db) return;
+            let request = db.transaction(["files"], "readonly").objectStore("files").get(billId);
+            request.onsuccess = function(e) {
+                let record = e.target.result;
+                if(record && record.blob) {
+                    let url = URL.createObjectURL(record.blob);
+                    let link = document.createElement("a");
+                    link.href = url; link.download = record.name;
+                    document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(url), 100);
+                } else {
+                    alert("This document scan was saved on a different device and is not available locally.");
+                }
+            };
+        }
+
+        document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('bill-date').value = new Date().toISOString().split('T')[0];
+
+        function switchControlTab(tabType) {
+            document.getElementById('tab-kharch-btn').className = "tab-box" + (tabType === 'KHARCH' ? " active-kharch" : "");
+            document.getElementById('tab-bills-btn').className = "tab-box" + (tabType === 'BILLS' ? " active-bills" : "");
+            document.getElementById('view-kharch-workspace').className = "workspace-view" + (tabType === 'KHARCH' ? " active" : "");
+            document.getElementById('view-bills-workspace').className = "workspace-view" + (tabType === 'BILLS' ? " active" : "");
+        }
+
+        function onBillStageChange(val) {
+            document.getElementById('tender-input-wrapper').style.display = (val === 'NEW_TENDER') ? 'block' : 'none';
+            document.getElementById('ra-input-wrapper').style.display = (val === 'RA_BILL') ? 'block' : 'none';
+        }
+
+        function onCategoryChange(catValue) {
+            toggleCustomInput(catValue, 'exp-custom-cat-text');
+            const wrapper = document.getElementById('labor-selector-wrapper');
+            if(catValue === 'Labour Fixed Salary' || catValue === 'Advance Labour Payment') {
+                wrapper.style.display = 'block';
+            } else {
+                wrapper.style.display = 'none';
+                document.getElementById('exp-labor-name').value = 'GENERAL_UNLINKED';
+                document.getElementById('exp-custom-labor-text').style.display = 'none';
+            }
+        }
+
+        function onDistrictChange(district, targetSelectId) {
+            const blockPrefix = targetSelectId === 'exp-project' ? 'exp' : 'bill';
+            document.getElementById(blockPrefix + '-custom-district-text').style.display = (district === "WRITE_CUSTOM") ? "block" : "none";
+            populateProjectDropdown(targetSelectId, district, false);
+        }
+
+        function onFilterDistrictChange(district, targetSelectId) {
+            populateProjectDropdown(targetSelectId, district, true);
+            updateDashboard();
+        }
+
+        function toggleCustomInput(val, txtBoxId) {
+            document.getElementById(txtBoxId).style.display = (val === "WRITE_CUSTOM") ? "block" : "none";
+        }
+
+        function populateProjectDropdown(targetSelectId, district, isFilterBar) {
+            const selectEl = document.getElementById(targetSelectId);
+            if (!selectEl) return;
+            selectEl.innerHTML = "";
+
+            if(isFilterBar) {
+                const allOpt = document.createElement('option');
+                allOpt.value = "ALL"; allOpt.innerText = "-- All Projects --";
+                selectEl.appendChild(allOpt);
+            }
+            if(district === "ALL" || district === "WRITE_CUSTOM") district = "Other";
+
+            let availableScopes = [...(projectDirectory[district] || projectDirectory["Other"])];
+            let addedScopes = customProjectsMap[district] || [];
+            let completeList = [...new Set([...availableScopes, ...addedScopes])];
+
+            completeList.forEach(proj => {
+                const opt = document.createElement('option');
+                opt.value = proj; opt.innerText = proj;
+                selectEl.appendChild(opt);
+            });
+
+            if(!isFilterBar) {
+                const customOpt = document.createElement('option');
+                customOpt.value = "WRITE_CUSTOM"; customOpt.innerText = "[ + Type Custom Project ]";
+                customOpt.style.color = "#4f46e5";
+                selectEl.appendChild(customOpt);
+            }
+        }
+
+        function addWorkerToGlobalDropdowns(name) {
+            addDynamicFilterItem('exp-labor-name', name);
+            addDynamicFilterItem('exp-filter-labor', name);
+        }
+
+        // Handle Expense Form Submit to Cloud
+        document.getElementById('expense-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submit-exp-btn');
+            submitBtn.innerText = "☁️ Saving to Cloud...";
+            submitBtn.disabled = true;
+
+            let dist = document.getElementById('exp-district').value;
+            if(dist === "WRITE_CUSTOM") dist = document.getElementById('exp-custom-district-text').value.trim();
+            
+            let proj = document.getElementById('exp-project').value;
+            if(proj === "WRITE_CUSTOM") {
+                proj = document.getElementById('exp-custom-project-text').value.trim();
+                if(!customProjectsMap[dist]) customProjectsMap[dist] = [];
+                customProjectsMap[dist].push(proj);
+                localStorage.setItem('kharch_district_custom_projects', JSON.stringify(customProjectsMap));
+            }
+            let cat = document.getElementById('exp-category').value;
+            if(cat === "WRITE_CUSTOM") cat = document.getElementById('exp-custom-cat-text').value.trim();
+
+            let worker = document.getElementById('exp-labor-name').value;
+            if(worker === "WRITE_CUSTOM") {
+                worker = document.getElementById('exp-custom-labor-text').value.trim();
+                addWorkerToGlobalDropdowns(worker);
+            }
+
+            let computedDate = formatDateDisplay(document.getElementById('exp-date').value);
+            let computedAmount = parseFloat(document.getElementById('exp-amount').value || 0);
+            let computedDetails = document.getElementById('exp-details').value.trim();
+            let finalWorkerName = worker !== 'GENERAL_UNLINKED' && (cat === 'Labour Fixed Salary' || cat === 'Advance Labour Payment') ? worker : null;
+            let partnerPayer = document.getElementById('exp-paid-by').value;
+
+            const newExpense = {
+                id: Date.now(), 
+                date: computedDate, 
+                paidBy: partnerPayer, 
+                district: dist, 
+                project: proj, 
+                category: cat, 
+                workerName: finalWorkerName, 
+                details: computedDetails, 
+                amount: computedAmount
+            };
+
+            // Push to Cloud
+            const res = await saveToCloud('expense', newExpense);
+            
+            if(res.status === 'success') {
+                expenses.unshift(newExpense); // Add to local state immediately
+                updateDashboard();
+                this.reset();
+                onCategoryChange('Labour Fixed Salary');
+                resetFormsDefault();
+                showSyncStatus("✔️ Saved!");
+                hideSyncStatus();
+            } else {
+                alert("Failed to save to cloud. Try again.");
+            }
+
+            submitBtn.innerText = "☁️ Save securely to Cloud";
+            submitBtn.disabled = false;
+        });
+
+        // Handle Bill Form Submit to Cloud
+        document.getElementById('bill-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submit-bill-btn');
+            submitBtn.innerText = "☁️ Saving to Cloud...";
+            submitBtn.disabled = true;
+
+            let dist = document.getElementById('bill-district').value;
+            if(dist === "WRITE_CUSTOM") dist = document.getElementById('bill-custom-district-text').value.trim();
+            
+            let proj = document.getElementById('bill-project').value;
+            if(proj === "WRITE_CUSTOM") {
+                proj = document.getElementById('bill-custom-project-text').value.trim();
+                if(!customProjectsMap[dist]) customProjectsMap[dist] = [];
+                customProjectsMap[dist].push(proj);
+                localStorage.setItem('kharch_district_custom_projects', JSON.stringify(customProjectsMap));
+            }
+
+            let type = document.getElementById('bill-stage-type').value;
+            let docLabel = document.getElementById('bill-doc-type').value;
+            let fileInput = document.getElementById('bill-file-input');
+            let billId = Date.now();
+            let woDateValue = type === 'NEW_TENDER' ? document.getElementById('bill-wo-date').value : '';
+
+            const newBill = {
+                id: billId,
+                date: formatDateDisplay(document.getElementById('bill-date').value),
+                woDate: woDateValue ? formatDateDisplay(woDateValue) : '',
+                district: dist, project: proj, stageType: type,
+                tenderAmount: type === 'NEW_TENDER' ? parseFloat(document.getElementById('bill-tender-amount').value || 0) : 0,
+                partAmount: type === 'RA_BILL' ? parseFloat(document.getElementById('bill-part-amount').value || 0) : 0,
+                level: type === 'RA_BILL' ? document.getElementById('bill-ra-level').value : 'Initial Contract Value',
+                details: document.getElementById('bill-details').value.trim(),
+                hasFile: fileInput.files.length > 0, 
+                fileLabel: fileInput.files.length > 0 ? docLabel : '', 
+                fileName: fileInput.files.length > 0 ? fileInput.files[0].name : ''
+            };
+
+            const processCloudSave = async () => {
+                const res = await saveToCloud('bill', newBill);
+                if(res.status === 'success') {
+                    pendingBills.unshift(newBill);
+                    updateDashboard();
+                    document.getElementById('bill-form').reset();
+                    onBillStageChange('NEW_TENDER');
+                    resetFormsDefault();
+                    showSyncStatus("✔️ Bill Saved!");
+                    hideSyncStatus();
+                } else {
+                    alert("Failed to save bill to cloud.");
+                }
+                submitBtn.innerText = "☁️ Save Bill securely to Cloud";
+                submitBtn.disabled = false;
+            };
+
+            if (fileInput.files.length > 0) {
+                let file = fileInput.files[0];
+                saveFileToVault(billId, file, file.name, file.type, docLabel, function() {
+                    processCloudSave();
+                });
+            } else {
+                processCloudSave();
+            }
+        });
+
+        function addDynamicFilterItem(selectId, value) {
+            const selectEl = document.getElementById(selectId);
+            if(!selectEl) return;
+            for (let i = 0; i < selectEl.options.length; i++) {
+                if (selectEl.options[i].value === value) return;
+            }
+            const opt = document.createElement('option');
+            opt.value = value; opt.innerText = value;
+            selectEl.appendChild(opt);
+        }
+
+        function formatDateDisplay(dateString) {
+            if(!dateString) return '';
+            if(dateString.includes('/')) return dateString;
+            const [year, month, day] = dateString.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        function parseDateObject(str) {
+            // Check if parsing from Cloud string or input form
+            if (!str || typeof str !== 'string') return new Date();
+            if (str.includes('/')) {
+                const [day, month, year] = str.split('/');
+                return new Date(year, month - 1, day);
+            } else {
+                const [year, month, day] = str.split('-');
+                return new Date(year, month - 1, day);
+            }
+        }
+
+        function resetFormsDefault() {
+            document.getElementById('exp-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('bill-date').value = new Date().toISOString().split('T')[0];
+            if(document.getElementById('bill-wo-date')) document.getElementById('bill-wo-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('exp-custom-district-text').style.display = "none";
+            document.getElementById('exp-custom-project-text').style.display = "none";
+            document.getElementById('exp-custom-cat-text').style.display = "none";
+            document.getElementById('bill-custom-district-text').style.display = "none";
+            document.getElementById('bill-custom-project-text').style.display = "none";
+            populateProjectDropdown('exp-project', document.getElementById('exp-district').value, false);
+            populateProjectDropdown('bill-project', document.getElementById('bill-district').value, false);
+            updateDashboard();
+        }
+
+        function checkFilterMatch(item, distFilter, projFilter, startF, endF, laborFilter, partnerFilter) {
+            if (distFilter !== "ALL" && item.district !== distFilter) return false;
+            if (projFilter !== "ALL" && item.project !== projFilter) return false;
+            if (laborFilter !== "ALL" && item.workerName !== laborFilter) return false;
+            if (partnerFilter !== "ALL" && (item.paidBy || "Sampu") !== partnerFilter) return false;
+            if (startF || endF) {
+                const itemDate = parseDateObject(item.date);
+                if (startF && itemDate < new Date(startF)) return false;
+                if (endF && itemDate > new Date(endF)) return false;
+            }
+            return true;
+        }
+
+        function calculateOutstandingForScope(targetDistrict, targetProject) {
+            let totalTenderAllocated = 0;
+            let totalRACleared = 0;
+            pendingBills.forEach(b => {
+                if(b.district === targetDistrict && b.project === targetProject) {
+                    if(b.stageType === 'NEW_TENDER') totalTenderAllocated += Number(b.tenderAmount);
+                    if(b.stageType === 'RA_BILL') totalRACleared += Number(b.partAmount);
+                }
+            });
+            return totalTenderAllocated - totalRACleared;
+        }
+
+        function calculateGlobalOutstanding() {
+            let totalTenders = 0;
+            let totalRAs = 0;
+            pendingBills.forEach(b => {
+                if(b.stageType === 'NEW_TENDER') totalTenders += Number(b.tenderAmount);
+                if(b.stageType === 'RA_BILL') totalRAs += Number(b.partAmount);
+            });
+            return totalTenders - totalRAs;
+        }
+
+        function updateDashboard() {
+            const expTbody = document.getElementById('expense-tbody');
+            const billTbody = document.getElementById('bill-tbody');
+            if(!expTbody || !billTbody) return;
+            
+            expTbody.innerHTML = ''; billTbody.innerHTML = '';
+
+            let totalExpGlobal = expenses.reduce((sum, i) => sum + Number(i.amount), 0);
+            let totalBillGlobalOutstanding = calculateGlobalOutstanding();
+
+            document.getElementById('total-kharch').innerText = '₹' + totalExpGlobal.toLocaleString('en-IN');
+            document.getElementById('total-pending').innerText = '₹' + totalBillGlobalOutstanding.toLocaleString('en-IN');
+
+            const expDist = document.getElementById('exp-filter-district').value;
+            const expProj = document.getElementById('exp-filter-project').value;
+            const expStart = document.getElementById('exp-filter-start').value;
+            const expEnd = document.getElementById('exp-filter-end').value;
+            const laborFilter = document.getElementById('exp-filter-labor').value;
+            const partnerFilter = document.getElementById('exp-filter-partner').value;
+            
+            let filteredExpSum = 0;
+            let individualLaborSalarySum = 0;
+            let individualLaborAdvanceSum = 0;
+            let individualPartnerExpenditureSum = 0;
+            let projectTotalExpSum = 0;
+
+            expenses.forEach(item => {
+                let itemPayer = item.paidBy || "Sampu";
+                let itemAmt = Number(item.amount) || 0;
+
+                if(item.district) {
+                    addDynamicFilterItem('exp-filter-district', item.district);
+                    addDynamicFilterItem('bill-filter-district', item.district);
+                }
+                if(item.workerName) addWorkerToGlobalDropdowns(item.workerName);
+
+                if(item.workerName && item.workerName === laborFilter) {
+                    if(item.category === 'Labour Fixed Salary') individualLaborSalarySum += itemAmt;
+                    if(item.category === 'Advance Labour Payment') individualLaborAdvanceSum += itemAmt;
+                }
+
+                if(itemPayer === partnerFilter) {
+                    individualPartnerExpenditureSum += itemAmt;
+                }
+
+                if(checkFilterMatch(item, expDist, expProj, expStart, expEnd, laborFilter, partnerFilter)) {
+                    filteredExpSum += itemAmt;
+                    
+                    let workerTagHTML = item.workerName ? `<br><span class="badge badge-labor">👤 ${item.workerName}</span>` : '';
+                    let partnerTagHTML = `<br><span class="badge badge-partner">💳 Paid by ${itemPayer}</span>`;
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.date}</td>
+                        <td><span class="badge">${item.district}</span><br><span style="font-size:12px;color:#64748b;font-weight:500;">${item.project}</span></td>
+                        <td><span class="badge badge-category">${item.category}</span>${workerTagHTML}${partnerTagHTML}</td>
+                        <td style="font-weight:500;">${item.details}</td>
+                        <td class="text-right font-bold" style="color:#1e3a8a; font-size: 15px;">₹${itemAmt.toLocaleString('en-IN')}</td>
+                    `;
+                    expTbody.appendChild(row);
+                }
+
+                // Filter exclusively for Profit/Loss margin matching
+                if(checkFilterMatch(item, expDist, expProj, expStart, expEnd, "ALL", "ALL")) {
+                    projectTotalExpSum += itemAmt;
+                }
+            });
+            document.getElementById('kharch-report-title').innerText = `Statement Entries (Filtered Total: ₹${filteredExpSum.toLocaleString('en-IN')})`;
+
+            const partnerWidget = document.getElementById('partner-summary-widget');
+            if(partnerFilter !== "ALL") {
+                partnerWidget.style.display = "flex";
+                document.getElementById('partner-total-value').innerText = '₹' + individualPartnerExpenditureSum.toLocaleString('en-IN');
+            } else {
+                partnerWidget.style.display = "none";
+            }
+
+            const laborSlip = document.getElementById('labor-summary-slip');
+            if(laborFilter !== "ALL") {
+                laborSlip.style.display = "grid";
+                document.getElementById('labor-total-salary').innerText = '₹' + individualLaborSalarySum.toLocaleString('en-IN');
+                document.getElementById('labor-total-advance').innerText = '₹' + individualLaborAdvanceSum.toLocaleString('en-IN');
+            } else {
+                laborSlip.style.display = "none";
+            }
+
+            const pnlWidget = document.getElementById('pnl-summary-widget');
+            if(expProj !== "ALL") {
+                let matchingTenderAllocationValue = 0;
+                let activeWoDateString = "N/A";
+                
+                pendingBills.forEach(b => {
+                    if(b.project === expProj && b.stageType === 'NEW_TENDER') {
+                        matchingTenderAllocationValue += Number(b.tenderAmount);
+                        if(b.woDate) activeWoDateString = b.woDate;
+                    }
+                });
+                
+                let netProfitOrLossValue = matchingTenderAllocationValue - projectTotalExpSum;
+                
+                if(matchingTenderAllocationValue === 0) {
+                    pnlWidget.className = "pnl-box pnl-neutral";
+                    pnlWidget.innerHTML = `<span>No Annual Contract setup found for <strong>${expProj}</strong></span> <span>₹${projectTotalExpSum.toLocaleString('en-IN')} spent</span>`;
+                } else if(netProfitOrLossValue >= 0) {
+                    pnlWidget.className = "pnl-box pnl-profit";
+                    pnlWidget.innerHTML = `<span>🏆 Year Margin Profit (WO issued: ${activeWoDateString})</span> <span>+ ₹${netProfitOrLossValue.toLocaleString('en-IN')} Profit</span>`;
+                } else {
+                    pnlWidget.className = "pnl-box pnl-loss";
+                    pnlWidget.innerHTML = `<span>⚠️ Loss Warning (WO issued: ${activeWoDateString})</span> <span>- ₹${Math.abs(netProfitOrLossValue).toLocaleString('en-IN')} Loss</span>`;
+                }
+            } else {
+                pnlWidget.className = "pnl-box pnl-neutral";
+                pnlWidget.innerHTML = `<span>Select a specific project above to compute Year Profit / Loss margins...</span> <span>₹0</span>`;
+            }
+
+            const billDist = document.getElementById('bill-filter-district').value;
+            const billProj = document.getElementById('bill-filter-project').value;
+            const billStart = document.getElementById('bill-filter-start').value;
+            const billEnd = document.getElementById('bill-filter-end').value;
+
+            pendingBills.forEach(bill => {
+                if(checkFilterMatch(bill, billDist, billProj, billStart, billEnd, "ALL", "ALL")) {
+                    let displayValue = bill.stageType === 'NEW_TENDER' ? Number(bill.tenderAmount) : Number(bill.partAmount);
+                    let displayTypeLabel = bill.stageType === 'NEW_TENDER' ? '🎯 Annual Work Order' : `⚡ ${bill.level}`;
+                    let currentProjectBalanceLeft = calculateOutstandingForScope(bill.district, bill.project);
+                    
+                    let dateColumnDisplayString = bill.stageType === 'NEW_TENDER' ? `${bill.date}<br><small style="color:#2563eb;font-weight:700;">WO: ${bill.woDate}</small>` : bill.date;
+
+                    // String conversion check for boolean 'hasFile' that comes from Google Sheets
+                    let hasAttachedFile = bill.hasFile === true || bill.hasFile === "true" || bill.hasFile === "TRUE";
+                    
+                    let documentBadgeHTML = '';
+                    if(hasAttachedFile) {
+                        documentBadgeHTML = `<br><button type="button" onclick="triggerVaultDownload(${bill.id})" class="btn-view-doc">
+                            <span>📥</span> Download Local Scan
+                        </button>`;
+                    }
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${dateColumnDisplayString}</td>
+                        <td><span class="badge badge-orange">${bill.district}</span><br><span style="font-size:12px;color:#64748b;font-weight:500;">${bill.project}</span></td>
+                        <td class="font-bold" style="color:#334155;">${displayTypeLabel}</td>
+                        <td class="font-bold" style="font-size: 15px;">₹${displayValue.toLocaleString('en-IN')}</td>
+                        <td>
+                            <div style="font-weight:600;">${bill.details}</div>
+                            ${documentBadgeHTML}
+                        </td>
+                        <td class="text-right font-bold" style="color:#c2410c; font-size: 15px;">₹${currentProjectBalanceLeft.toLocaleString('en-IN')}</td>
+                    `;
+                    billTbody.appendChild(row);
+                }
+            });
+            
+            let filteredOutstandingSumCalculated = 0;
+            let uniquelyEvaluatedPairs = [];
+            pendingBills.forEach(b => {
+                if(checkFilterMatch(b, billDist, billProj, billStart, billEnd, "ALL", "ALL")) {
+                    let evaluationKey = `${b.district}-${b.project}`;
+                    if(!uniquelyEvaluatedPairs.includes(evaluationKey)) {
+                        uniquelyEvaluatedPairs.push(evaluationKey);
+                        filteredOutstandingSumCalculated += calculateOutstandingForScope(b.district, b.project);
+                    }
+                }
+            });
+            document.getElementById('bills-report-title').innerText = `Statement Records (Selected Outstanding: ₹${filteredOutstandingSumCalculated.toLocaleString('en-IN')})`;
+        }
+
+        function exportExpenses() {
+            let csv = "data:text/csv;charset=utf-8,DATE,PAID BY,DISTRICT,PROJECT,CATEGORY,WORKER,PARTICULARS,AMOUNT\n";
+            expenses.forEach(i => csv += `"${i.date}","${i.paidBy || 'Sampu'}","${i.district}","${i.project}","${i.category}","${i.workerName || 'None'}","${i.details.replace(/"/g, '""')}",${i.amount}\n`);
+            triggerDownload(csv, "Filtered_Operational_Kharch_Report.csv");
+        }
+
+        function exportBills() {
+            let csv = "data:text/csv;charset=utf-8,DATE,DISTRICT,PROJECT,STAGE TYPE,VALUE LOGGED,DETAILS\n";
+            pendingBills.forEach(b => csv += `"${b.date}","${b.district}","${b.project}","${b.level}",${b.stageType === 'NEW_TENDER' ? b.tenderAmount : b.partAmount},"${b.details.replace(/"/g, '""')}"\n`);
+            triggerDownload(csv, "Progressive_RA_Bills_Report.csv");
+        }
+
+        function triggerDownload(content, fileName) {
+            const encodedUri = encodeURI(content);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        }
+
+        populateProjectDropdown('exp-project', document.getElementById('exp-district').value, false);
+        populateProjectDropdown('bill-project', document.getElementById('bill-district').value, false);
+        populateProjectDropdown('exp-filter-project', 'ALL', true);
+        populateProjectDropdown('bill-filter-project', 'ALL', true);
+        onCategoryChange('Labour Fixed Salary');
+    </script>
+</body>
+</html>
