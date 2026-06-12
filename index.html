@@ -1149,6 +1149,7 @@
         populateProjectDropdown('bill-filter-project', 'ALL', true);
         onCategoryChange('Labour Fixed Salary');
         async function saveCustomEntry(dist, proj, cat) {
+            console.log("Save function was clicked!");
     try {
         await fetch(GOOGLE_APP_SCRIPT_URL, {
             method: 'POST',
